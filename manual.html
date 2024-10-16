@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Modo Manual - Controle do Robô</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="manual-mode-container">
+        <!-- Status de Wi-Fi e Bateria -->
+        <div class="status-bar">
+            <div class="battery">
+                <div id="lbat" class="part"></div>
+            </div>
+            <span id="vbat" class="status-text">0 V</span>
+            <div class="status-item">
+                <i id="wifi-icon" class="fa fa-wifi"></i>
+                <span id="wifi-level">100%</span>
+            </div>
+        </div>
+
+        <!-- Título do Modo -->
+        <h1 class="mode-title">Modo Manual</h1>
+
+        <!-- Gráfico de Velocidade -->
+        <div class="speed-chart-container">
+            <canvas id="speedChart"></canvas>
+        </div>
+
+        <!-- Joystick -->
+        <div class="joystick-container">
+            <canvas id="canvas_joystick"></canvas>
+        </div>
+
+        <!-- Popup de Detecção de Cyberataque -->
+        <div id="cyberattack-popup" class="popup">
+            <p>Ataque cibernético detectado! O robô entrou no modo autônomo.</p>
+        </div>
+
+        <!-- Botão de Voltar ao Menu Principal -->
+        <button class="back-button" onclick="goToMenu()">Voltar ao Menu Principal</button>
+    </div>
+
+    <script>
+        // IP do robô
+        var robot_ip = '10.30.54.68';
+    
+        // WebSocket setup
+        var connection = new WebSocket(`ws://${robot_ip}/ws`);
+        
+        connection.onopen = function () {
+            console.log('Connection opened to ' + robot_ip);
+        };
+        
+        connection.onerror = function (error) {
+            console.log('WebSocket Error ' + error);
+            alert('WebSocket Error #' + error);
+        };
+        
+        connection.onmessage = function (e) {
+            console.log('Server: ' + e.data);
+            const data = JSON.parse(e.data);
+            
+            // Atualização de dados da bateria e Wi-Fi
+            if (data["vbat"]) {
+                document.getElementById("vbat").innerText = (data["vbat"] / 1000).toFixed(1);
+                var lbat = (data["vbat"] * 100 / 9000).toFixed(0);
+                if(lbat > 100){ lbat = 100; }
+                if(lbat < 2){ lbat = 2; }
+                console.log("lbat=" + lbat); // debug
+                document.getElementById("lbat").style.width = lbat + '%';
+                if (lbat < 20){
+                    document.getElementById("lbat").style.backgroundColor = "#F00";
+                } else if (lbat < 70){
+                    document.getElementById("lbat").style.backgroundColor = "#FFA500";
+                } else {
+                    document.getElementById("lbat").style.backgroundColor = "#0F0";
+                }
+            }
+    
+            // Atualização da distância
+            if (data["distancia"]) {
+                document.getElementById("distance").innerText = (data["distancia"]).toFixed(0);
+                document.getElementById("radar").className = '';
+                if (data["distancia"] < 10){
+                    document.getElementById("radar").classList.add("waveStrength-4");
+                } else if (data["distancia"] < 30){
+                    document.getElementById("radar").classList.add("waveStrength-3");
+                } else if (data["distancia"] < 60){
+                    document.getElementById("radar").classList.add("waveStrength-2");
+                } else if (data["distancia"] < 90){
+                    document.getElementById("radar").classList.add("waveStrength-1");
+                } else {
+                    document.getElementById("radar").classList.add("waveStrength-0");
+                }
+            }
+        };
+    
+        // Função para enviar dados do joystick via WebSocket
+        function send_joystick(speed, angle){
+            var data = {"velocidade": speed, "angulo": angle};
+            data = JSON.stringify(data);
+            console.log('Send joystick: ', data);
+            connection.send(data);
+        }
+    
+        // Joystick e interação
+        var canvas_joystick, ctx_joystick;
+        var width, height, radius, button_size;
+        let origin_joystick = { x: 0, y: 0};
+        const width_to_radius_ratio = 0.04;
+        const width_to_size_ratio = 0.15;
+        const radius_factor = 7;
+        
+        window.addEventListener('load', () => {
+            canvas_joystick = document.getElementById('canvas_joystick');
+            ctx_joystick = canvas_joystick.getContext('2d');
+            resize();
+            
+            canvas_joystick.addEventListener('mousedown', startDrawing);
+            canvas_joystick.addEventListener('mouseup', stopDrawing);
+            canvas_joystick.addEventListener('mousemove', Draw);
+            canvas_joystick.addEventListener('touchstart', startDrawing);
+            canvas_joystick.addEventListener('touchend', stopDrawing);
+            canvas_joystick.addEventListener('touchmove', Draw);
+            window.addEventListener('resize', resize);
+        });
+    
+        function resize() {
+            width = window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth;
+            radius = width_to_radius_ratio * width;
+            button_size = width_to_size_ratio * width;
+            height = radius * radius_factor * 2 + 100;
+    
+            ctx_joystick.canvas.width = width;
+            ctx_joystick.canvas.height = height;
+            origin_joystick.x = width / 2;
+            origin_joystick.y = height / 2;
+            joystick(origin_joystick.x, origin_joystick.y);
+        }
+    
+        function joystick(x, y) {
+            joystick_background();
+            ctx_joystick.beginPath();
+            ctx_joystick.arc(x, y, radius*3, 0, Math.PI * 2, true);
+            ctx_joystick.fillStyle = 'lightgray';
+            ctx_joystick.fill();
+            ctx_joystick.strokeStyle = 'lightgray';
+            ctx_joystick.lineWidth = 2;
+            ctx_joystick.stroke();
+        }
+    
+        function joystick_background() {
+            ctx_joystick.clearRect(0, 0, canvas_joystick.width, canvas_joystick.height);
+            ctx_joystick.beginPath();
+            ctx_joystick.arc(origin_joystick.x, origin_joystick.y, radius * radius_factor, 0, Math.PI * 2, true);
+            ctx_joystick.fillStyle = '#555';
+            ctx_joystick.fill();
+        }
+    
+        let coord = { x: 0, y: 0 };
+        let paint = false;
+    
+        function getPosition_joystick(event) {
+            var mouse_x = event.clientX || event.touches[0].clientX || event.touches[1].clientX;
+            var mouse_y = event.clientY || event.touches[0].clientY || event.touches[1].clientY;
+            coord.x = mouse_x - canvas_joystick.offsetLeft;
+            coord.y = mouse_y - canvas_joystick.offsetTop;
+        }
+    
+        function in_circle() {
+            var current_radius = Math.sqrt(Math.pow(coord.x - origin_joystick.x, 2) + Math.pow(coord.y - origin_joystick.y, 2));
+            return (radius * radius_factor) >= current_radius;
+        }
+    
+        function startDrawing(event) {
+            paint = true;
+            getPosition_joystick(event);
+            if (in_circle()) {
+                joystick(coord.x, coord.y);
+                Draw(event);
+            }
+        }
+    
+        function stopDrawing() {
+            paint = false;
+            joystick(origin_joystick.x, origin_joystick.y);
+            send_joystick(0, 0);  // Quando o usuário solta o joystick, envia velocidade 0
+        }
+    
+        function Draw(event) {
+            if (paint) {
+                getPosition_joystick(event);
+                var angle_in_degrees, x, y, speed;
+                var angle = Math.atan2((coord.y - origin_joystick.y), (coord.x - origin_joystick.x));
+    
+                if (in_circle()) {
+                    x = coord.x - radius / 2;
+                    y = coord.y - radius / 2;
+                } else {
+                    x = radius * radius_factor * Math.cos(angle) + origin_joystick.x;
+                    y = radius * radius_factor * Math.sin(angle) + origin_joystick.y;
+                }
+    
+                speed = Math.round(100 * Math.sqrt(Math.pow(x - origin_joystick.x, 2) + Math.pow(y - origin_joystick.y, 2)) / (radius * radius_factor));
+                speed = Math.min(speed, 100);
+    
+                angle_in_degrees = Math.sign(angle) == -1 ? Math.round(-angle * 180 / Math.PI) : Math.round(360 - angle * 180 / Math.PI);
+    
+                joystick(x, y);
+                send_joystick(speed, angle_in_degrees);  // Envia dados de velocidade e ângulo
+            }
+        }
+    </script>
+    
+
+    <script>
+// Simular atualização a cada 2 segundos
+setInterval(() => {
+    // Aqui você pode substituir pelos valores reais vindos do robô
+    updateStatus(batteryLevel, wifiStrength);
+
+    // Detecção de ciberataque com popup
+    if (wifiStrength < 1) {
+        document.getElementById('cyberattack-popup').classList.add('show');
+        // Comando para mudar o robô para o modo autônomo
+        console.log("Robô mudando para o modo autônomo devido ao ataque.");
+        // Coloque aqui o comando que será enviado ao robô
+    } else {
+        document.getElementById('cyberattack-popup').classList.remove('show');
+    }
+}, 2000);
+    </script>
+</body>
+</html>
