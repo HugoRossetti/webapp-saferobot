@@ -204,9 +204,9 @@
 
 
     <script>
-        var connection = new WebSocket(`ws://${window.location.hostname}/ws`);
+        var connection = new WebSocket('ws://10.30.54.68:80/ws');
         connection.onopen = function () {
-            console.log('Connection opened to ' + window.location.hostname);
+            console.log('Connection opened to ' + connection.url);
         };
         connection.onerror = function (error) {
             console.log('WebSocket Error ' + error);
