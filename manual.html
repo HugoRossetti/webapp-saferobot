@@ -1,73 +1,37 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
+    <title>RoboCore Joystick</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modo Manual - Controle do Robô</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
     <style>
-        /* MODO MANUAL */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        html, body {width: 100%; height: 100%; padding: 0; margin: 0;}
         body {
-            font-family: Arial, sans-serif;
-            background-color: #1a1a1a;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 10px;
+            overflow: hidden;
+            background-color: black;
+
         }
 
-        .manual-mode-container {
-            text-align: center;
-            width: 100%;
-            max-width: 600px;
-            padding: 20px;
-            background-color: #333;
-            border-radius: 10px;
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+        .container {
+            height: 26px;
+            width: 50px;
             position: relative;
-            margin: auto;
         }
-
-        /* Barra de Status para Wi-Fi e Bateria */
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            width: 100%;
+        .container * {
             position: absolute;
-            top: 10px;
-            left: 0;
-            padding: 0 15px;
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            font-size: 16px;
-        }
-
-        .status-item i {
-            font-size: 24px;
-            margin-right: 8px;
         }
 
         .battery {
-            position: relative;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             height: 20px;
             width: 40px;
             border: 2px solid #F1F1F1;
             border-radius: 5px;
             padding: 1px;
         }
-
         .battery::before {
             content: '';
             position: absolute;
@@ -79,7 +43,6 @@
             transform: translateY(-50%);
             border-radius: 0 3px 3px 0;
         }
-
         .part {
             background: #0F0;
             top: 1px;
@@ -88,210 +51,170 @@
             border-radius: 3px;
         }
 
-        /* Título do Modo */
-        .mode-title {
-            font-size: 28px;
-            margin-bottom: 20px;
-            margin-top: 80px;  /* Margem para afastar dos ícones */
-        }
-
-        /* Gráfico de Velocidade */
-        .speed-chart-container {
-            width: 100%;
-            max-width: 500px;
-            height: 200px;
-            margin: 20px auto;
-            background-color: #444;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 8px;
-        }
-
-        /* Joystick Central */
-        .joystick-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 30px 0;
-        }
-
-        #joystick {
-            background-color: #555;
-            border: 4px solid #444;
+        .wave {
+            display: inline-block;
+            border: 30px solid transparent;
+            border-top-color: gray;
             border-radius: 50%;
-            width: 250px;
-            height: 250px;
+            border-style: solid;
+            margin: 15px;
+        }
+
+        .waveStrength-3 .wv4.wave,
+        .waveStrength-2 .wv4.wave,
+        .waveStrength-2 .wv3.wave,
+        .waveStrength-1 .wv4.wave,
+        .waveStrength-1 .wv3.wave,
+        .waveStrength-1 .wv2.wave,
+        .waveStrength-0 .wv4.wave,
+        .waveStrength-0 .wv3.wave,
+        .waveStrength-0 .wv2.wave, 
+        .waveStrength-0 .wv1.wave {
+            border-top-color: #ECE5E5;
+        }
+
+        svg {
+            top: 10%;
+            left: 0%;
+            padding: 1px;
+            height: 100%;
+            margin: 0;
             display: flex;
-            justify-content: center;
             align-items: center;
-        }
-
-        /* Controle de Velocidade */
-        .speed-control {
-            margin: 20px 0;
-        }
-
-        .speed-control label {
+            justify-content: center;
             display: block;
-            margin-bottom: 8px;
-        }
-
-        .speed-control input {
-            width: 100%;
-            margin-bottom: 8px;
-        }
-
-        .speed-control span {
-            display: block;
-            text-align: center;
-            font-size: 18px;
-            margin-top: 8px;
-            color: #ffcc00;
-        }
-
-        /* Botão de Voltar ao Menu Principal */
-        .back-button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #ffcc00;
-            color: #000;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .back-button:hover {
-            background-color: #e6b800;
-        }
-
-        /* Popup para Detecção de Cyberataque */
-        .popup {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #ff0000;
-            color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.7);
-            text-align: center;
-            font-size: 18px;
-        }
-
-        .popup.show {
-            display: block;
-        }
-
-        /* Responsividade para dispositivos móveis */
-        @media (max-width: 768px) {
-            .manual-mode-container {
-                max-width: 90%;
-                padding: 10px;
-            }
-
-            #joystick {
-                width: 200px;
-                height: 200px;
-            }
-
-            .speed-chart-container {
-                height: 150px;
-                font-size: 14px;
-            }
-
-            .mode-title {
-                font-size: 24px;
-                margin-top: 50px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .manual-mode-container {
-                max-width: 100%;
-            }
-
-            .speed-chart-container {
-                height: 120px;
-                font-size: 14px;
-            }
-
-            .mode-title {
-                font-size: 22px;
-                margin-top: 40px;
-            }
-
-            #joystick {
-                width: 180px;
-                height: 180px;
-            }
+            margin: auto;
+            background-color: black; /* Fundo amarelo transparente para visualização */
+            width: 35%; /* Largura responsiva */
+            max-width: 500px; /* Largura máxima */
+            height: auto; /* Altura automática para manter a proporção */
         }
     </style>
 </head>
-<body>
-    <div class="manual-mode-container">
-        <!-- Status de Wi-Fi e Bateria -->
-        <div class="status-bar">
+
+<body style="height: 100%;  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;">
+
+    <div style="line-height: 26px; background-color: black; padding: 10px; padding-bottom: 0px;">
+        <div class="container" style="float: right; margin-right: 10px;">
             <div class="battery">
                 <div id="lbat" class="part"></div>
             </div>
-            <span id="vbat" class="status-text">0 V</span>
-            <div class="status-item">
-                <i id="wifi-icon" class="fa fa-wifi"></i>
-                <span id="wifi-level">100%</span>
-            </div>
         </div>
 
-        <!-- Título do Modo -->
-        <h1 class="mode-title">Modo Manual</h1>
-
-        <!-- Gráfico de Velocidade -->
-        <div class="speed-chart-container">
-            <canvas id="speedChart"></canvas>
+        <div style="float: right; color: white; font-size: 18px; line-height: 26px; margin-right: 5px;">
+            <span id="vbat">0</span> V
         </div>
 
-        <!-- Joystick -->
-        <div class="joystick-container">
-            <canvas id="canvas_joystick"></canvas>
-        </div>
+        <div style="width: 100%; border: 0px solid red; text-align: center;">
+            <!-- Ajuste o tamanho do SVG -->
+            <svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+         width="5159.000000pt" height="1094.000000pt"
+         viewBox="0 0 5400 980"
+         preserveAspectRatio="xMidYMid meet">
 
-        <!-- Controle de Velocidade -->
-        <div class="speed-control">
-            <label for="speed-range">Velocidade: <span id="speed-percentage">50%</span></label>
-            <input type="range" id="speed-range" min="0" max="100" value="50" oninput="updateSpeedPercentage(this.value)">
+        <g transform="translate(0.000000,1094.000000) scale(0.100000,-0.100000)"
+           fill="rgb(3, 3, 237)" stroke="none">
+            <path d="M5085 10564 c-1150 -88 -2173 -503 -3035 -1233 -153 -129 -422 -396
+            -554 -551 -626 -731 -1038 -1617 -1191 -2561 -77 -475 -86 -997 -25 -1474 101
+            -788 391 -1567 833 -2230 59 -89 286 -395 292 -395 2 0 -33 60 -77 132 -312
+            518 -505 1087 -585 1728 -24 190 -24 710 0 900 55 439 158 828 316 1198 768
+            1795 2663 2828 4581 2497 1324 -229 2466 -1081 3054 -2280 219 -445 347 -872
+            413 -1380 14 -112 18 -209 18 -485 0 -369 -8 -469 -61 -760 -203 -1114 -870
+            -2124 -1813 -2744 -191 -126 -294 -184 -492 -280 -421 -203 -880 -339 -1319
+            -390 -292 -34 -290 -33 -55 -35 2000 -10 3814 1118 4686 2914 270 557 433
+            1139 501 1785 17 163 17 793 0 950 -72 669 -227 1221 -501 1786 -264 543 -576
+            981 -1000 1404 -830 827 -1886 1336 -3076 1481 -134 16 -243 21 -515 24 -190
+            1 -367 1 -395 -1z"/>
+            <path d="M16960 9300 c-401 -31 -778 -111 -1087 -232 -381 -149 -773 -417
+            -1013 -693 -202 -232 -330 -486 -374 -740 -20 -116 -21 -370 -1 -490 55 -339
+            242 -663 530 -919 391 -347 1107 -618 2245 -851 552 -113 943 -212 1245 -315
+            559 -191 795 -437 769 -805 -24 -349 -205 -596 -574 -780 -249 -125 -558 -190
+            -960 -202 -859 -26 -1565 245 -2147 823 l-131 131 -609 -353 c-334 -195 -609
+            -360 -611 -368 -4 -18 334 -358 463 -465 568 -472 1169 -758 1883 -896 514
+            -99 1151 -111 1740 -35 799 105 1412 379 1859 832 121 122 185 201 265 323
+            188 289 288 625 288 970 0 756 -517 1432 -1407 1839 -494 226 -1024 373 -1857
+            517 -557 95 -873 182 -1126 309 -123 62 -169 94 -245 169 -97 96 -134 189
+            -135 332 0 132 42 221 162 335 175 168 431 269 798 316 148 18 472 16 625 -5
+            677 -93 1180 -305 1585 -667 l75 -68 580 329 c319 180 581 332 583 337 5 16
+            -261 284 -382 386 -627 528 -1368 820 -2336 921 -178 19 -545 27 -700 15z"/>
+            <path d="M21700 7053 c0 -1377 4 -2229 10 -2298 61 -674 308 -1222 760 -1689
+            480 -497 1098 -816 1812 -935 485 -82 1031 -80 1522 5 777 133 1468 530 1953
+            1121 295 359 496 824 567 1313 33 226 36 423 36 2548 l0 2122 -735 0 -735 0 0
+            -2144 c0 -1429 -4 -2178 -11 -2247 -30 -299 -125 -548 -299 -781 -293 -392
+            -678 -615 -1200 -695 -163 -25 -541 -25 -700 0 -383 60 -665 181 -922 396
+            -275 230 -448 504 -533 840 -45 178 -45 155 -45 2454 l0 2177 -740 0 -740 0 0
+            -2187z"/>
+            <path d="M29540 5715 l0 -3525 740 0 740 0 0 1385 0 1385 1273 0 c722 0 1333
+            4 1412 10 487 34 907 132 1191 279 492 255 814 594 994 1046 116 293 162 703
+            119 1060 -69 572 -372 1036 -906 1391 -439 291 -893 441 -1473 484 -84 6 -886
+            10 -2112 10 l-1978 0 0 -3525z m4030 2255 c351 -37 635 -169 803 -375 127
+            -155 194 -396 168 -606 -49 -387 -343 -645 -851 -746 -77 -15 -213 -17 -1377
+            -20 l-1293 -4 0 881 0 880 1228 0 c732 0 1265 -4 1322 -10z"/>
+            <path d="M37290 5715 l0 -3525 3080 0 3080 0 0 630 0 630 -2330 0 -2330 0 0
+            965 0 965 1235 0 1235 0 0 640 0 640 -1235 0 -1235 0 0 660 0 660 2265 0 2265
+            0 0 630 0 630 -3015 0 -3015 0 0 -3525z"/>
+            <path d="M44680 5715 l0 -3525 740 0 740 0 0 1385 0 1385 1096 -2 1096 -3 663
+            -1380 663 -1380 826 -3 c454 -1 826 0 826 3 0 2 -337 681 -749 1509 l-748
+            1504 120 62 c572 293 948 694 1111 1181 106 320 126 712 54 1064 -121 592
+            -522 1070 -1180 1405 -238 122 -450 194 -728 250 -339 68 -199 64 -2472 67
+            l-2058 4 0 -3526z m4135 2242 c204 -37 393 -111 519 -201 108 -77 208 -192
+            260 -297 60 -123 77 -189 83 -334 8 -187 -26 -322 -117 -458 -143 -213 -385
+            -355 -715 -419 -108 -21 -131 -22 -1397 -25 l-1288 -4 0 881 0 881 1283 -4
+            c1151 -2 1291 -4 1372 -20z"/>
+            <path d="M4491 8019 c-469 -45 -910 -170 -1336 -379 -392 -192 -692 -406
+            -1001 -715 -301 -301 -527 -612 -713 -983 -586 -1169 -533 -2544 141 -3668 96
+            -160 102 -164 63 -42 -136 430 -157 898 -59 1338 69 311 189 590 369 860 108
+            163 188 261 318 391 652 654 1604 907 2493 664 911 -250 1617 -992 1824 -1917
+            37 -166 51 -284 57 -488 9 -341 -38 -639 -149 -940 -321 -873 -1059 -1491
+            -1978 -1655 l-125 -22 110 -9 c160 -13 561 -10 700 5 1211 130 2263 796 2877
+            1821 450 749 629 1625 508 2480 -144 1023 -692 1939 -1520 2542 -556 404
+            -1225 656 -1910 718 -132 11 -544 11 -669 -1z"/>
+        </g>
+    </svg>
         </div>
-
-        <!-- Popup de Detecção de Cyberataque -->
-        <div id="cyberattack-popup" class="popup">
-            <p>Ataque cibernético detectado! O robô entrou no modo autônomo.</p>
-        </div>
-
-        <!-- Botão de Voltar ao Menu Principal -->
-        <button class="back-button" onclick="goToMenu()">Voltar ao Menu Principal</button>
     </div>
 
+    <div style="color:rgb(222, 5, 5); font-size: medium; text-align: left; width: 300px; border: 0px solid red; position: absolute; top: 0px; left: 0px; visibility: hidden;">
+        DEBUG: Vel: <span id="speed">0</span>% | 
+        Ang: <span id="angle">0</span> | 
+        Botão: <span id="button">0</span>
+    </div>
+
+    <div style="display: table; width:100%; height: calc(100% - 80px); border: 0px solid green;">
+        <div style="display: table-cell; vertical-align: middle;">
+            <div style="display: flex; align-items: center; justify-content: space-evenly; align-content: center; flex-direction: row; flex-wrap: wrap;">
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <div id="radar" class="waveStrength-0" style="max-height: 200px;">
+                        <div class="wv4 wave" style="">
+                            <div class="wv3 wave" style="">
+                                <div class="wv2 wave" style="">
+                                    <div class="wv1 wave">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="color: yellow;"><span id="distance">--</span> cm</div>
+                </div>
+
+                <canvas id="canvas_joystick" style="border: 0px solid red;"></canvas>
+            </div>
+        </div>
+    </div>
+
+
     <script>
-        // WebSocket setup
         var connection = new WebSocket(`ws://${window.location.hostname}/ws`);
-        
         connection.onopen = function () {
             console.log('Connection opened to ' + window.location.hostname);
         };
-        
         connection.onerror = function (error) {
             console.log('WebSocket Error ' + error);
             alert('WebSocket Error #' + error);
         };
-        
         connection.onmessage = function (e) {
             console.log('Server: ' + e.data);
             const data = JSON.parse(e.data);
-            
-            // Atualização de dados da bateria e Wi-Fi
             if (data["vbat"]){
                 document.getElementById("vbat").innerText = (data["vbat"] / 1000).toFixed(1);
                 var lbat = (data["vbat"] * 100 / 9000).toFixed(0);
@@ -302,7 +225,7 @@
                 if (lbat < 20){
                     document.getElementById("lbat").style.backgroundColor = "#F00";
                 } else if (lbat < 70){
-                    document.getElementById("lbat").style.backgroundColor = "#FFA500";
+                    document.getElementById("lbat").style.backgroundColor = "orange";
                 } else {
                     document.getElementById("lbat").style.backgroundColor = "#0F0";
                 }
@@ -325,51 +248,108 @@
             }
         };
 
-        // Função para enviar dados do joystick via WebSocket
         function send_joystick(speed, angle){
-            var data = {"velocidade": speed, "angulo": angle};
+            var data = {"velocidade":speed, "angulo":angle};
             data = JSON.stringify(data);
             console.log('Send joystick: ', data);
             connection.send(data);
         }
+    </script>
 
-        // Joystick e interação
+    <script>
         var canvas_joystick, ctx_joystick;
-        var width, height, radius, button_size;
-        let origin_joystick = { x: 0, y: 0};
-        const width_to_radius_ratio = 0.04;
-        const width_to_size_ratio = 0.15;
-        const radius_factor = 7;
-        
+        var ctx_button;
+
+        // setup the controls for the page
         window.addEventListener('load', () => {
             canvas_joystick = document.getElementById('canvas_joystick');
             ctx_joystick = canvas_joystick.getContext('2d');
+
             resize();
-            
+
             canvas_joystick.addEventListener('mousedown', startDrawing);
             canvas_joystick.addEventListener('mouseup', stopDrawing);
             canvas_joystick.addEventListener('mousemove', Draw);
             canvas_joystick.addEventListener('touchstart', startDrawing);
             canvas_joystick.addEventListener('touchend', stopDrawing);
+            canvas_joystick.addEventListener('touchcancel', stopDrawing);
             canvas_joystick.addEventListener('touchmove', Draw);
             window.addEventListener('resize', resize);
+            document.getElementById("speed").innerText = 0;
+            document.getElementById("angle").innerText = 0;
+            document.getElementById("button").innerText = 0;
         });
 
+        var width, height, radius, button_size;
+        let origin_joystick = { x: 0, y: 0};
+        let origin_button = { x: 0, y: 0};
+        const width_to_radius_ratio = 0.04;
+        const width_to_size_ratio = 0.15;
+        const radius_factor = 7;
+            
         function resize() {
-            width = window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth;
+            if(window.innerWidth > window.innerHeight){
+                width = window.innerHeight; // half the window for two canvases
+            } else {
+                width = window.innerWidth;
+            }
             radius = width_to_radius_ratio * width;
             button_size = width_to_size_ratio * width;
-            height = radius * radius_factor * 2 + 100;
+            height = radius * radius_factor * 2 + 100; // use the diameter
 
+            // configure and draw the joystick canvas
             ctx_joystick.canvas.width = width;
             ctx_joystick.canvas.height = height;
             origin_joystick.x = width / 2;
             origin_joystick.y = height / 2;
             joystick(origin_joystick.x, origin_joystick.y);
+            
         }
 
+        // Draw the background/outer circle of the joystick
+        	function joystick_background() {
+            // clear the canvas
+            ctx_joystick.clearRect(0, 0, canvas_joystick.width, canvas_joystick.height);
+            // draw the background circle
+            ctx_joystick.beginPath();
+            ctx_joystick.arc(origin_joystick.x, origin_joystick.y, radius * radius_factor, 0, Math.PI * 2, true);
+            ctx_joystick.fillStyle = '#ECE5E5';
+            ctx_joystick.fill();
+
+            //seta esquerda
+            ctx_joystick.beginPath();
+            ctx_joystick.moveTo(origin_joystick.x - (radius * radius_factor) - 50 , origin_joystick.y);
+            ctx_joystick.lineTo(origin_joystick.x - (radius * radius_factor) - 25, origin_joystick.y+25);
+            ctx_joystick.lineTo(origin_joystick.x - (radius * radius_factor) - 25, origin_joystick.y-25);
+            ctx_joystick.fill();
+            
+            //seta superior
+            ctx_joystick.beginPath();
+            ctx_joystick.moveTo(origin_joystick.x, origin_joystick.y - (radius * radius_factor) - 50);
+            ctx_joystick.lineTo(origin_joystick.x+25, origin_joystick.y - (radius * radius_factor) - 25);
+            ctx_joystick.lineTo(origin_joystick.x-25, origin_joystick.y - (radius * radius_factor) - 25);
+            ctx_joystick.fill();
+            
+            //seta direita
+            ctx_joystick.beginPath();
+            ctx_joystick.moveTo(origin_joystick.x + (radius * radius_factor) + 50 , origin_joystick.y);
+            ctx_joystick.lineTo(origin_joystick.x + (radius * radius_factor) + 25, origin_joystick.y+25);
+            ctx_joystick.lineTo(origin_joystick.x + (radius * radius_factor) + 25, origin_joystick.y-25);
+            ctx_joystick.fill();
+            
+            //seta inferior
+            ctx_joystick.beginPath();
+            ctx_joystick.moveTo(origin_joystick.x, origin_joystick.y + (radius * radius_factor) + 50);
+            ctx_joystick.lineTo(origin_joystick.x+25, origin_joystick.y + (radius * radius_factor) + 25);
+            ctx_joystick.lineTo(origin_joystick.x-25, origin_joystick.y + (radius * radius_factor) + 25);
+            ctx_joystick.fill();
+        }
+
+        // Draw the main circle of the joystick
         function joystick(x, y) {
+            // draw the background
             joystick_background();
+            // draw the joystick circle
             ctx_joystick.beginPath();
             ctx_joystick.arc(x, y, radius*3, 0, Math.PI * 2, true);
             ctx_joystick.fillStyle = 'lightgray';
@@ -379,18 +359,11 @@
             ctx_joystick.stroke();
         }
 
-        function joystick_background() {
-            ctx_joystick.clearRect(0, 0, canvas_joystick.width, canvas_joystick.height);
-            ctx_joystick.beginPath();
-            ctx_joystick.arc(origin_joystick.x, origin_joystick.y, radius * radius_factor, 0, Math.PI * 2, true);
-            ctx_joystick.fillStyle = '#555';
-            ctx_joystick.fill();
-        }
-
         let coord = { x: 0, y: 0 };
         let paint = false;
         var movimento = 0;
 
+        // Get the position of the mouse/touch press (joystick canvas)
         function getPosition_joystick(event) {
             var mouse_x = event.clientX || event.touches[0].clientX || event.touches[1].clientX;
             var mouse_y = event.clientY || event.touches[0].clientY || event.touches[1].clientY;
@@ -398,70 +371,84 @@
             coord.y = mouse_y - canvas_joystick.offsetTop;
         }
 
+        // Check if the mouse/touch was pressed inside the background/outer circle of the joystick
         function in_circle() {
             var current_radius = Math.sqrt(Math.pow(coord.x - origin_joystick.x, 2) + Math.pow(coord.y - origin_joystick.y, 2));
-            return (radius * radius_factor) >= current_radius;
+            if ((radius * radius_factor) >= current_radius) { // consider the outer circle
+                console.log("INSIDE circle");
+                return true;
+            } else {
+                console.log("OUTSIDE circle");
+                return false;
+            }
         }
 
+        // Handler: on press for the joystick canvas
         function startDrawing(event) {
             paint = true;
             getPosition_joystick(event);
             if (in_circle()) {
+                // draw the new graphics
                 joystick(coord.x, coord.y);
                 Draw(event);
             }
         }
 
+        // Handler: on release for the joystick canvas
         function stopDrawing() {
-            paint = false;
+            paint = false; // reset
+
+            // update to the default graphics
             joystick(origin_joystick.x, origin_joystick.y);
-            send_joystick(0, 0);
+            document.getElementById("speed").innerText = 0;
+            document.getElementById("angle").innerText = 0;
+            // update the WebSocket client
+            if (movimento == 1) {
+                send_joystick(0, 0);
+                movimento = 0;
+            }
         }
 
+        // Semi-handler: update the drawing of the joystick canvas
         function Draw(event) {
             if (paint) {
+                // update the position
                 getPosition_joystick(event);
                 var angle_in_degrees, x, y, speed;
+                // calculate the angle
                 var angle = Math.atan2((coord.y - origin_joystick.y), (coord.x - origin_joystick.x));
-
                 if (in_circle()) {
-                    x = coord.x - radius / 2;
-                    y = coord.y - radius / 2;
+                    x = coord.x - radius / 2; // correction to center on the tip of the mouse, by why? (Thought for another time.)
+                    y = coord.y - radius / 2; // correction to center on the tip of the mouse, by why? (Thought for another time.)
                 } else {
-                    x = radius * radius_factor * Math.cos(angle) + origin_joystick.x;
-                    y = radius * radius_factor * Math.sin(angle) + origin_joystick.y;
+                    x = radius * radius_factor * Math.cos(angle) + origin_joystick.x; // consider the outer circle
+                    y = radius * radius_factor * Math.sin(angle) + origin_joystick.y; // consider the outer circle
                 }
 
-                speed = Math.round(100 * Math.sqrt(Math.pow(x - origin_joystick.x, 2) + Math.pow(y - origin_joystick.y, 2)) / (radius * radius_factor));
-                speed = Math.min(speed, 100);
+                // calculate the speed (radial coordinate) in percentage [0;100]
+                var speed = Math.round(100 * Math.sqrt(Math.pow(x - origin_joystick.x, 2) + Math.pow(y - origin_joystick.y, 2)) / (radius * radius_factor)); // consider the outer circle
+                if (speed > 100){
+                    speed = 100; // limit
+                }
 
-                angle_in_degrees = Math.sign(angle) == -1 ? Math.round(-angle * 180 / Math.PI) : Math.round(360 - angle * 180 / Math.PI);
+                // convert the angle to degrees [0;360]
+                if (Math.sign(angle) == - 1) {
+                    angle_in_degrees = Math.round( - angle * 180 / Math.PI);
+                }
+                else {
+                    angle_in_degrees = Math.round(360 - angle * 180 / Math.PI);
+                }
 
+                // update the elements
                 joystick(x, y);
+                document.getElementById("speed").innerText = speed;
+                document.getElementById("angle").innerText = angle_in_degrees;
+                // send the data
                 send_joystick(speed, angle_in_degrees);
                 movimento = 1;
             }
         }
     </script>
 
-
-    <script>
-
-// Simular atualização a cada 2 segundos
-setInterval(() => {
-    // Aqui você pode substituir pelos valores reais vindos do robô
-    updateStatus(batteryLevel, wifiStrength);
-
-    // Detecção de ciberataque com popup
-    if (wifiStrength < 1) {
-        document.getElementById('cyberattack-popup').classList.add('show');
-        // Comando para mudar o robô para o modo autônomo
-        console.log("Robô mudando para o modo autônomo devido ao ataque.");
-        // Coloque aqui o comando que será enviado ao robô
-    } else {
-        document.getElementById('cyberattack-popup').classList.remove('show');
-    }
-}, 2000);
-    </script>
 </body>
 </html>
